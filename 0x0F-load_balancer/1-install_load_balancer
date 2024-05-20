@@ -34,13 +34,13 @@ defaults
   timeout server 15s
   timeout http-request 10s
 
-frontend clickviral-tech-frontend
+frontend Plantinah-tech-frontend
     bind *:80
     default_backend clickviral-tech-backend
 
-backend clickviral-tech-backend
+backend Plantinah-tech-backend
     balance roundrobin
-    server 530781-web-01 54.90.46.237:80 check
+    server 530781-web-01 100.25.155.80:80 check
     server 530781-web-02 3.90.82.218:80 check
 "
 
