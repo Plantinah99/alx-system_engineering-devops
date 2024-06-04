@@ -1,31 +1,35 @@
 #!/usr/bin/python3
-"""Contains recurse function"""
+"""Function to query a list of all hot posts on a given Reddit subreddit."""
 import requests
+from time import sleep
 
+def recurse(subreddit, hot_list=[], after=None, count=0, delay=2):
+    url = f"https://www.reddit.com/r/{subreddit}/hot.json"
+    headers = {'user-agent': 'my-app/0.0.1'}
+    params = {"after": after, "limit": 100}
 
-def recurse(subreddit, hot_list=[], after="", count=0):
-    """Returns a list of titles of all hot posts on a given subreddit."""
-    url = "https://www.reddit.com/r/{}/hot/.json".format(subreddit)
-    headers = {
-        "User-Agent": "0x16-api_advanced:project:\
-v1.0.0 (by /u/firdaus_cartoon_jr)"
-    }
-    params = {
-        "after": after,
-        "count": count,
-        "limit": 100
-    }
-    response = requests.get(url, headers=headers, params=params,
-                            allow_redirects=False)
-    if response.status_code == 404:
-        return None
+    try:
+        response = requests.get(url, headers=headers, params=params)
+        response.raise_for_status()  # Raise an exception for non-2xx status codes
 
-    results = response.json().get("data")
-    after = results.get("after")
-    count += results.get("dist")
-    for c in results.get("children"):
-        hot_list.append(c.get("data").get("title"))
+        if response.text:
+            data = response.json()
+            results = data.get("data")
+            after = results.get("after")
+            count += results.get("dist", 0)
+            for child in results.get("children", []):
+                hot_list.append(child.get("data", {}).get("title"))
 
-    if after is not None:
-        return recurse(subreddit, hot_list, after, count)
-    return hot_list
+            if after is not None:
+                sleep(delay)  # Delay to respect rate-limiting
+                return recurse(subreddit, hot_list, after, count, delay)
+            else:
+                return hot_list, count
+        else:
+            return None, None
+    except requests.exceptions.RequestException as e:
+        print(f"Error: {e}")
+        return None, None
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        return None, None
