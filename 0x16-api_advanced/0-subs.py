@@ -1,42 +1,42 @@
 #!/usr/bin/python3
-"""Module to query Reddit API and print top 10 hot posts of a subreddit."""
+"""Module to query Reddit API and get number of subscribers for a subreddit."""
 import requests
 
 
-def top_ten(subreddit):
+def number_of_subscribers(subreddit):
     """
-    Queries the Reddit API and prints the titles of the first 10 hot posts
-    listed for a given subreddit.
+    Queries the Reddit API and returns the number of subscribers
+    for a given subreddit.
 
     Args:
         subreddit (str): The name of the subreddit to query.
 
     Returns:
-        None
+        int: The number of subscribers. Returns 0 if the subreddit is invalid.
     """
-    url = f"https://www.reddit.com/r/{subreddit}/hot.json"
+    # Reddit API URL for subreddit information
+    url = f"https://www.reddit.com/r/{subreddit}/about.json"
+
+    # Custom User-Agent to avoid Too Many Requests error
     headers = {'User-Agent': 'MyRedditBot/1.0'}
-    params = {'limit': 10}
 
     try:
-        response = requests.get(url, headers=headers, params=params,
-                                allow_redirects=False)
-        
+        # Make the API request
+        response = requests.get(url, headers=headers, allow_redirects=False)
+
+        # Check if the subreddit is valid
         if response.status_code == 200:
-            try:
-                data = response.json()
-                posts = data.get('data', {}).get('children', [])
-                if posts:
-                    for post in posts:
-                        print(post['data']['title'])
-                else:
-                    print("None")
-            except ValueError:
-                print("None")
+            # Parse the JSON response
+            data = response.json()
+            # Return the number of subscribers
+            return data['data']['subscribers']
         else:
-            print("None")
+            # Invalid subreddit
+            return 0
+
     except requests.RequestException:
-        print("None")
+        # Handle any request-related errors
+        return 0
 
 
 if __name__ == '__main__':
@@ -44,4 +44,4 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         print("Please pass an argument for the subreddit to search.")
     else:
-        top_ten(sys.argv[1])
+        print("{:d}".format(number_of_subscribers(sys.argv[1])))
