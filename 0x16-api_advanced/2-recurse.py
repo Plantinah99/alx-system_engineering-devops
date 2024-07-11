@@ -1,54 +1,56 @@
 #!/usr/bin/python3
+"""
+This module contains a recursive function to fetch hot posts from a subreddit.
+"""
 
 import requests
 
-def recurse(subreddit, hot_list=[], after=None):
-    # Base URL for Reddit API
+
+def recurse(subreddit, hot_list=None, after=None):
+    """
+    Recursively fetch all hot post titles from a given subreddit.
+
+    Args:
+        subreddit (str): The name of the subreddit.
+        hot_list (list): List to store hot post titles (default is None).
+        after (str): Token for pagination (default is None).
+
+    Returns:
+        list: A list of hot post titles, or None if the subreddit is invalid.
+    """
+    if hot_list is None:
+        hot_list = []
+
     url = f"https://www.reddit.com/r/{subreddit}/hot.json"
-    
-    # Set custom User-Agent to avoid Too Many Requests error
-    headers = {'User-Agent': 'MyRedditBot/1.0'}
-    
-    # Parameters for the API request
-    params = {'limit': 100}  # Maximum number of items per request
-    if after:
-        params['after'] = after
-    
-    try:
-        # Make the API request
-        response = requests.get(url, headers=headers, params=params, allow_redirects=False)
-        
-        # Check if the subreddit is valid
-        if response.status_code == 404:
-            return None
-        
-        # Raise an exception for other HTTP errors
-        response.raise_for_status()
-        
-        # Parse the JSON response
-        data = response.json()
-        
-        # Extract post titles and add them to the list
-        for post in data['data']['children']:
-            hot_list.append(post['data']['title'])
-        
-        # Check if there are more pages
-        if data['data']['after']:
-            # Recursive call with the 'after' parameter
-            return recurse(subreddit, hot_list, data['data']['after'])
-        else:
-            # Base case: no more pages, return the complete list
-            return hot_list
-    
-    except requests.RequestException:
-        # Handle any request-related errors
+    headers = {'User-Agent': 'MyBot/0.0.1'}
+    params = {'limit': 100, 'after': after}
+
+    response = requests.get(url, headers=headers, params=params,
+                            allow_redirects=False)
+
+    if response.status_code != 200:
         return None
 
-# Example usage
-if __name__ == '__main__':
-    subreddit = "python"
-    result = recurse(subreddit)
-    if result is not None:
-        print(f"Number of hot posts in r/{subreddit}: {len(result)}")
+    data = response.json().get('data', {})
+    posts = data.get('children', [])
+
+    for post in posts:
+        hot_list.append(post['data']['title'])
+
+    after = data.get('after')
+    if after:
+        return recurse(subreddit, hot_list, after)
     else:
-        print(f"Failed to retrieve hot posts from r/{subreddit}")
+        return hot_list
+
+
+if __name__ == '__main__':
+    import sys
+    if len(sys.argv) < 2:
+        print("Please pass an argument for the subreddit to search.")
+    else:
+        result = recurse(sys.argv[1])
+        if result is not None:
+            print(len(result))
+        else:
+            print("None")
