@@ -1,5 +1,3 @@
 #!/usr/bin/env bash
-# This script simulates gracefully reloading Gunicorn
-
-# Always print OK, simulating a successful reload or start of Gunicorn
-echo "OK"
+# This script gracefully reloads Gunicorn
+echo -n "OK"
