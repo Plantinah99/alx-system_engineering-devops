@@ -5,11 +5,13 @@
 PID=$(pgrep gunicorn)
 
 if [ -z "$PID" ]; then
-    echo "Gunicorn is not running."
-    exit 1
+    echo "Gunicorn is not running. Starting Gunicorn..."
+    #  start Gunicorn 
+    #  gunicorn --bind 0.0.0.0:5000 module:app
+    gunicorn --bind 0.0.0.0:5000 module:app &
+    echo "OK"
+else
+    # Send the HUP signal to Gunicorn to initiate a graceful reload
+    kill -HUP "$PID"
+    echo "OK"
 fi
-
-# Send the HUP signal to Gunicorn to initiate a graceful reload
-kill -HUP "$PID"
-
-echo "Sent graceful reload signal to Gunicorn (PID: $PID)"
