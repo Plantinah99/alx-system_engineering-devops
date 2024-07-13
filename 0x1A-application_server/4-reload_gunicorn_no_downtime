@@ -10,6 +10,6 @@ if [ -z "$PID" ]; then
 fi
 
 # Send the HUP signal to Gunicorn to initiate a graceful reload
-kill -HUP $PID
+kill -HUP "$PID"
 
 echo "Sent graceful reload signal to Gunicorn (PID: $PID)"
